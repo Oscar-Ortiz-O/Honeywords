@@ -75,8 +75,8 @@ def create_login_interface():
     loginButton.place(x=50, y=240)
 
     # Sets the Google and Facebook buttons
-    googleImg = customtkinter.CTkImage(Image.open("./assets/google.webp").resize((20,20), Image.ANTIALIAS))
-    facebookImg = customtkinter.CTkImage(Image.open("./assets/facebook.png").resize((20,20), Image.ANTIALIAS))
+    googleImg = customtkinter.CTkImage(Image.open("./assets/google.webp").resize((20,20)))
+    facebookImg = customtkinter.CTkImage(Image.open("./assets/facebook.png").resize((20,20)))
 
     googleButton = customtkinter.CTkButton(master=frame, image=googleImg, text="Google", width=100, height=20, compound="left", fg_color='white', text_color='black', hover_color='#AFAFAF')
     googleButton.place(x=50, y=290)
