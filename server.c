@@ -46,39 +46,51 @@ int main() {
 
     printf("Server listening on port %d...\n", PORT);
 
-    // Accept a connection from a client
-    if ((client_socket = accept(server_socket, (struct sockaddr *)&client_address, &client_address_len)) == INVALID_SOCKET) {
-        printf("Accept failed.\n");
-        closesocket(server_socket);
-        WSACleanup();
-        return 1;
+    while (1) {
+        // Accept a connection from a client
+        if ((client_socket = accept(server_socket, (struct sockaddr *)&client_address, &client_address_len)) == INVALID_SOCKET) {
+            printf("Accept failed.\n");
+            closesocket(server_socket);
+            WSACleanup();
+            return 1;
+        }
+
+        printf("Connection accepted from %s:%d\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
+
+        // Read and process data from the client
+        char buffer[MAX_BUFFER_SIZE];
+        int bytes_received;
+
+        while ((bytes_received = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
+            buffer[bytes_received] = '\0'; // Null-terminate the received data
+            printf("Received: %s", buffer);
+
+            // Check if the message starts with "login"
+            if (strncmp(buffer, "login", 5) == 0) {
+                // Respond with "true"
+                const char* response = "true";
+                send(client_socket, response, strlen(response), 0);
+            // Check if the message starts with "login"
+            } else if (strncmp(buffer, "register", 8) == 0) {
+                // Echo back to the client
+                const char* response = "false";
+                send(client_socket, response, strlen(response), 0);
+            }
+        }
+
+        if (bytes_received == 0) {
+            // Connection closed by the client
+            printf("Client disconnected.\n");
+        } else if (bytes_received == SOCKET_ERROR) {
+            // Error in receiving data
+            printf("Receive failed.\n");
+        }
+
+        // Close the client socket
+        closesocket(client_socket);
     }
 
-    printf("Connection accepted from %s:%d\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
-
-    // Read and echo data back to the client
-    char buffer[MAX_BUFFER_SIZE];
-    int bytes_received;
-
-    while ((bytes_received = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
-        buffer[bytes_received] = '\0'; // Null-terminate the received data
-        printf("Received: %s", buffer);
-
-        // Echo back to the client
-        send(client_socket, buffer, strlen(buffer), 0);
-    }
-
-    if (bytes_received == 0) {
-        // Connection closed by the client
-        printf("Client disconnected.\n");
-    } else if (bytes_received == SOCKET_ERROR) {
-        // Error in receiving data
-        printf("Receive failed.\n");
-    }
-
-    // Close the client socket
-    closesocket(client_socket);
-
+    // The server will never reach this point unless there's an error in the loop
     // Close the server socket
     closesocket(server_socket);
     WSACleanup();

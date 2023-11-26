@@ -1,17 +1,19 @@
 import tkinter
 import customtkinter
 from PIL import ImageTk,Image
+import clientSocket
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("dark-blue")
 
 # Destroys login window and creates home window
-def button_login(app):
+def button_login(app, username, password):
 
     # POSSIBLE SPACE FOR AUTHENTICATION
         #
         #
         #
+    clientSocket.client_socket("login|" + username + "|" + password)
 
     app.destroy()            # Removes window and creates new window
     create_home_interface()
@@ -19,14 +21,13 @@ def button_login(app):
 
 # Destroys login window and creates registration window
 def button_signUp(app):
-
     app.destroy()            # Removes window and creates new window
     create_register_interface()
 
 
 # Destroys login window and creates login window
-def button_signIn(app):
-
+def button_signIn(app, username, password):
+    clientSocket.client_socket("register|" + username + "|" + password)
     app.destroy()            # Removes window and creates new window
     create_login_interface()
 
@@ -87,7 +88,7 @@ def create_register_interface():
     passwordEntry.place(x=50, y=220)
 
     # Sets the Create button
-    loginButton = customtkinter.CTkButton(master=frame, width=100, text="Create", command=lambda: button_signIn(registerWindow), corner_radius=6)
+    loginButton = customtkinter.CTkButton(master=frame, width=100, text="Create", command=lambda: button_signIn(registerWindow, usernameEntry.get(), passwordEntry.get()), corner_radius=6)
     loginButton.place(x=110, y=280)
 
     signUpLabel = customtkinter.CTkButton(master=frame, command=lambda: button_signIn(registerWindow), border_width=0, fg_color="transparent", text="Already have an account? Login Here!",font=('Century Gothic', 12, 'bold'))
@@ -136,7 +137,7 @@ def create_login_interface():
     signUpLabel.place(x=50, y=340)
 
     # Sets the login button
-    loginButton = customtkinter.CTkButton(master=frame, width=220, text="Login", command=lambda: button_login(app), corner_radius=6)
+    loginButton = customtkinter.CTkButton(master=frame, width=220, text="Login", command=lambda: button_login(app, usernameEntry.get(), passwordEntry.get()), corner_radius=6)
     loginButton.place(x=50, y=240)
 
     # Sets the Google and Facebook buttons

@@ -1,12 +1,10 @@
 import socket
 
 HOST = 'localhost'
-PORT = 10000
-
+PORT = 8080
 
 def client_socket(message):
     # Create a TCP/IP socket
-    # with automatically will call sock.close()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             # Connect the socket to the port where the server is listening
@@ -14,26 +12,19 @@ def client_socket(message):
             print("Connecting to {} port: {}".format(*server_address))
             sock.connect(server_address)
 
+            # Take in data to send to the server
+            message_to_send = message
+
             # Send data
-            print("Sending {!r}".format(message))
-            sock.sendall(message)
+            message_bytes = message_to_send.encode('utf-8')
+            print("Sending {!r}".format(message_bytes))
+            sock.sendall(message_bytes)
 
-            # Look for the response
-            amount_received = 0
-            amount_expected = len(message)
-
-            while amount_received < amount_expected:
-                data = sock.recv(1024)
-                amount_received += len(data)
-                print("Received {!r}".format(data))
+            # Receive and print the response from the server
+            response = sock.recv(1024)
+            print("Received response from server: {!r}".format(response.decode('utf-8')))
         except OSError as e:
             print("Error with client socket")
             print(e)
         finally:
             print("Closing socket")
-
-
-if __name__ == '__main__':
-    # Send data
-    message_to_send = b"This is the message"
-    client_socket(message_to_send)
