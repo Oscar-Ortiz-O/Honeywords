@@ -1,12 +1,7 @@
 #include <stdio.h>
-#include <winsock2.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#define PORT 8080
-#define MAX_BUFFER_SIZE 1024
 
 // Structure to hold both honeywords and the real password index
 typedef struct {
@@ -112,109 +107,27 @@ int findPassword(const char *inputedUser, const char *inputedPass, const char *p
     return -1; // If username and/or password was not found
 }
 
-
 int main() {
-    WSADATA wsaData;
-    SOCKET server_socket, client_socket;
-    struct sockaddr_in server_address, client_address;
-    int client_address_len = sizeof(client_address);
+    char inputedUser[50];
+    char inputedPass[50];
 
-    // Initialize Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        printf("Failed to initialize Winsock.\n");
-        return 1;
+    printf("Enter username: ");
+    fgets(inputedUser, sizeof(inputedUser), stdin);
+    inputedUser[strcspn(inputedUser, "\n")] = '\0'; // Remove newline character
+
+    printf("Enter password: ");
+    fgets(inputedPass, sizeof(inputedPass), stdin);
+    inputedPass[strcspn(inputedPass, "\n")] = '\0'; // Remove newline character
+
+    const char *passFileName = "passwordFile.txt";
+
+    int result = findPassword(inputedUser, inputedPass, passFileName);
+
+    if (result != -1) {
+        printf("Password found at index: %d\n", result);
+    } else {
+        printf("Username and/or password not found.\n");
     }
-
-    // Create socket
-    if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
-        printf("Socket creation failed.\n");
-        WSACleanup();
-        return 1;
-    }
-
-    // Initialize server address struct
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(PORT);
-
-    // Bind the socket
-    if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == SOCKET_ERROR) {
-        printf("Socket bind failed.\n");
-        closesocket(server_socket);
-        WSACleanup();
-        return 1;
-    }
-
-    // Listen for incoming connections
-    if (listen(server_socket, 5) == SOCKET_ERROR) {
-        printf("Listen failed.\n");
-        closesocket(server_socket);
-        WSACleanup();
-        return 1;
-    }
-
-    printf("Server listening on port %d...\n", PORT);
-
-    while (1) {
-        // Accept a connection from a client
-        if ((client_socket = accept(server_socket, (struct sockaddr *)&client_address, &client_address_len)) == INVALID_SOCKET) {
-            printf("Accept failed.\n");
-            closesocket(server_socket);
-            WSACleanup();
-            return 1;
-        }
-
-        printf("Connection accepted from %s:%d\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
-
-        // Read and process data from the client
-        char buffer[MAX_BUFFER_SIZE];
-        char username[MAX_BUFFER_SIZE];
-        char password[MAX_BUFFER_SIZE];
-        int bytes_received;
-
-        while ((bytes_received = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
-            buffer[bytes_received] = '\0'; // Null-terminate the received data
-            printf("Received: %s", buffer);
-
-            char *token = strtok(buffer, "|");
-            strcpy(username, strtok(NULL, "|"));
-            strcpy(password, strtok(NULL, "|"));
-
-            // Check if the message starts with "login"
-            if (strcmp(token, "login") == 0) {
-
-                // Respond with "true"
-                const char* response = "true";
-                send(client_socket, response, strlen(response), 0);
-
-            // Check if the message starts with "register"
-            } else if (strcmp(token, "register") == 0) {
-                
-                // Echo back to the client
-                const char* response = "false";
-                send(client_socket, response, strlen(response), 0);
-            }
-        }
-
-        printf("Username: %s\n", username);
-        printf("Password: %s\n", password);
-
-        if (bytes_received == 0) {
-            // Connection closed by the client
-            printf("Client disconnected.\n");
-        } else if (bytes_received == SOCKET_ERROR) {
-            // Error in receiving data
-            printf("Receive failed.\n");
-        }
-
-        // Close the client socket
-        closesocket(client_socket);
-    }
-
-    // The server will never reach this point unless there's an error in the loop
-    // Close the server socket
-    closesocket(server_socket);
-    WSACleanup();
 
     return 0;
 }
