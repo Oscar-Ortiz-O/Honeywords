@@ -7,6 +7,8 @@
 
 #define PORT 8080
 #define MAX_BUFFER_SIZE 1024
+#define POSITIONS 3
+#define NUM_OF_HONEYWORDS 19
 
 // Structure to hold both honeywords and the real password index
 typedef struct {
@@ -17,6 +19,28 @@ typedef struct {
 // Function to generate a random number between min and max
 int getRandomNumber(int min, int max) {
     return rand() % (max - min + 1) + min;
+}
+
+// Function to write honeywords to a text file
+void writeHoneywordsToFile(const char *filename, const HoneywordsResult *result, const char *username) {
+    FILE *file = fopen(filename, "a"); // Open file in append mode
+
+    if (file != NULL) {
+        // Write the username to the file
+        fprintf(file, "%s,", username);
+
+        int honeywordsCount = 0;
+        // Write honeywords to the file
+        while (result->honeywords[honeywordsCount] != NULL) {
+            fprintf(file, "%s,", result->honeywords[honeywordsCount]);
+            honeywordsCount++;
+        }
+
+        fprintf(file, "\n"); // Move to the next line
+        fclose(file); // Close the file
+    } else {
+        printf("Error opening file: %s\n", filename);
+    }
 }
 
 // Function to generate honeywords
@@ -100,6 +124,7 @@ int findPassword(const char *inputedUser, const char *inputedPass, const char *p
         // If it is, get the index in which it was found.
         int index = 0;
         while ((token = strtok(NULL, ",")) != NULL) {
+
             if (strcmp(token, inputedPass) == 0) {
                 fclose(passFile);
                 return index;
@@ -183,12 +208,30 @@ int main() {
             // Check if the message starts with "login"
             if (strcmp(token, "login") == 0) {
 
-                // Respond with "true"
+                // Check that password and username exist in the password file
+                int passwordIndex = findPassword(username, password, "passwordFile.txt");
+
                 const char* response = "true";
+
+                if (passwordIndex == -1) { // If username or password was not found
+                    response = "false";
+                }
+                
                 send(client_socket, response, strlen(response), 0);
 
             // Check if the message starts with "register"
             } else if (strcmp(token, "register") == 0) {
+
+                HoneywordsResult result = generateHoneywords(password, POSITIONS, NUM_OF_HONEYWORDS);
+
+                printf("The value of myInteger is: %d\n", result.realPasswordIndex);
+
+                printf("Honeywords:\n");
+                for (int i = 0; i < 19; i++) {
+                    printf("%d: %s\n", i, result.honeywords[i]);
+                }
+
+                writeHoneywordsToFile("passwordFile.txt", &result, username); 
                 
                 // Echo back to the client
                 const char* response = "false";

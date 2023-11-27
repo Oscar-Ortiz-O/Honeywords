@@ -13,10 +13,11 @@ def button_login(app, username, password):
         #
         #
         #
-    clientSocket.client_socket("login|" + username + "|" + password)
+    response = clientSocket.client_socket("login|" + username + "|" + password)
 
-    app.destroy()            # Removes window and creates new window
-    create_home_interface()
+    if (response == "true"):
+        app.destroy()            # Removes window and creates new window
+        create_home_interface()
 
 
 # Destroys login window and creates registration window

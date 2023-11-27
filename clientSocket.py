@@ -22,7 +22,10 @@ def client_socket(message):
 
             # Receive and print the response from the server
             response = sock.recv(1024)
+            decoded_response = response.decode('utf-8')
             print("Received response from server: {!r}".format(response.decode('utf-8')))
+            return decoded_response
+
         except OSError as e:
             print("Error with client socket")
             print(e)
