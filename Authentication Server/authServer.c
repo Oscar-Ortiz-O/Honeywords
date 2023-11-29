@@ -4,11 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "../Honeyword Checker/honeyChecker.c"
 
 #define PORT 8080
 #define MAX_BUFFER_SIZE 1024
 #define POSITIONS 3
-#define NUM_OF_HONEYWORDS 19
+#define NUM_OF_HONEYWORDS 20
 
 // Structure to hold both honeywords and the real password index
 typedef struct {
@@ -31,7 +32,7 @@ void writeHoneywordsToFile(const char *filename, const HoneywordsResult *result,
 
         int honeywordsCount = 0;
         // Write honeywords to the file
-        while (result->honeywords[honeywordsCount] != NULL) {
+        while (honeywordsCount < NUM_OF_HONEYWORDS) {
             fprintf(file, "%s,", result->honeywords[honeywordsCount]);
             honeywordsCount++;
         }
@@ -53,17 +54,17 @@ HoneywordsResult generateHoneywords(char *password, int numPositions, int numHon
     srand(time(NULL));
 
     // Allocate memory for honeywords
-    result.honeywords = (char **)malloc((numHoneywords + 1) * sizeof(char *));  // +1 for the real password
+    result.honeywords = (char **)malloc((numHoneywords + 1) * sizeof(char *)); 
     for (int i = 0; i <= numHoneywords; ++i) {
         result.honeywords[i] = (char *)malloc((passwordLength + 1) * sizeof(char));
     }
 
     // Copy the real password to a random position in the array
-    result.realPasswordIndex = getRandomNumber(0, numHoneywords);
+    result.realPasswordIndex = getRandomNumber(0, numHoneywords - 1);
     strcpy(result.honeywords[result.realPasswordIndex], password);
 
     // Generate honeywords
-    for (int i = 0; i < numHoneywords; ++i) {
+    for (int i = 0; i <= numHoneywords; ++i) {
         // Skip the position where the real password is already placed
         if (i == result.realPasswordIndex) {
             continue;
@@ -109,7 +110,7 @@ int findPassword(const char *inputedUser, const char *inputedPass, const char *p
         return -1; // Unable to open the file
     }
 
-    char line[256]; // Assuming a maximum line length of 255 characters
+    char line[1000]; // Assuming a maximum line length of 255 characters
 
     while (fgets(line, sizeof(line), passFile) != NULL) {
         char *token = strtok(line, ",");
@@ -211,10 +212,14 @@ int main() {
                 // Check that password and username exist in the password file
                 int passwordIndex = findPassword(username, password, "passwordFile.txt");
 
+                int result = checkPasswordIndex("../Honeyword Checker/passwordIndex.txt", username, passwordIndex);
+
                 const char* response = "true";
 
                 if (passwordIndex == -1) { // If username or password was not found
                     response = "false";
+                } else if (result == 0) { // If honeyword was used
+                    response = "alarm"; 
                 }
                 
                 send(client_socket, response, strlen(response), 0);
@@ -222,16 +227,11 @@ int main() {
             // Check if the message starts with "register"
             } else if (strcmp(token, "register") == 0) {
 
-                HoneywordsResult result = generateHoneywords(password, POSITIONS, NUM_OF_HONEYWORDS);
-
-                printf("The value of myInteger is: %d\n", result.realPasswordIndex);
-
-                printf("Honeywords:\n");
-                for (int i = 0; i < 19; i++) {
-                    printf("%d: %s\n", i, result.honeywords[i]);
-                }
+                HoneywordsResult result = generateHoneywords(password, POSITIONS, NUM_OF_HONEYWORDS - 1);
 
                 writeHoneywordsToFile("passwordFile.txt", &result, username); 
+
+                writePasswordIndexToFile("../Honeyword Checker/passwordIndex.txt", username, result.realPasswordIndex);
                 
                 // Echo back to the client
                 const char* response = "false";

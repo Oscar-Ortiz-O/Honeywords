@@ -9,32 +9,38 @@ customtkinter.set_default_color_theme("dark-blue")
 # Destroys login window and creates home window
 def button_login(app, username, password):
 
-    # POSSIBLE SPACE FOR AUTHENTICATION
-        #
-        #
-        #
     response = clientSocket.client_socket("login|" + username + "|" + password)
 
     if (response == "true"):
-        app.destroy()            # Removes window and creates new window
-        create_home_interface()
+        app.destroy()            
+        create_home_interface("Successful Login")
+    
+    elif (response == "alarm"):
+        app.destroy()            
+        create_home_interface("Alarm!")
 
 
 # Destroys login window and creates registration window
 def button_signUp(app):
-    app.destroy()            # Removes window and creates new window
+    app.destroy()            
     create_register_interface()
 
 
 # Destroys login window and creates login window
-def button_signIn(app, username, password):
-    clientSocket.client_socket("register|" + username + "|" + password)
-    app.destroy()            # Removes window and creates new window
+def button_signIn(app):
+    app.destroy()           
     create_login_interface()
 
 
+# Destroys login window and creates login window after creating a new user
+def button_createUser(app, username, password):
+    response = clientSocket.client_socket("register|" + username + "|" + password)
+    app.destroy()            
+    create_login_interface()
+    
+
 # Handles the creation of the home window
-def create_home_interface():
+def create_home_interface(message):
 
     # Initializes home window
     homeWindow = customtkinter.CTk()
@@ -44,12 +50,11 @@ def create_home_interface():
     homeWindow.title('Home Screen')
 
     # Creating labels
-    homeLabel=customtkinter.CTkLabel(master=homeWindow, text="Successful Login",font=('Century Gothic',65))
+    homeLabel=customtkinter.CTkLabel(master=homeWindow, text=message,font=('Century Gothic',65))
     homeLabel.place(relx=0.5, rely=0.5,  anchor=tkinter.CENTER)
 
     # Home window event looper
     homeWindow.mainloop()
-
 
 
 # Handles the creation of the registration window
@@ -89,11 +94,11 @@ def create_register_interface():
     passwordEntry.place(x=50, y=220)
 
     # Sets the Create button
-    loginButton = customtkinter.CTkButton(master=frame, width=100, text="Create", command=lambda: button_signIn(registerWindow, usernameEntry.get(), passwordEntry.get()), corner_radius=6)
+    loginButton = customtkinter.CTkButton(master=frame, width=100, text="Create", command=lambda: button_createUser(registerWindow, usernameEntry.get(), passwordEntry.get()), corner_radius=6)
     loginButton.place(x=110, y=280)
 
     signUpLabel = customtkinter.CTkButton(master=frame, command=lambda: button_signIn(registerWindow), border_width=0, fg_color="transparent", text="Already have an account? Login Here!",font=('Century Gothic', 12, 'bold'))
-    signUpLabel.place(x=50, y=340)
+    signUpLabel.place(x=47, y=340)
 
     registerWindow.mainloop()
 
